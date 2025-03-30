@@ -12,7 +12,7 @@ exports.getCart = async (req, res) => {
 
         const cart = await Cart.findOne({ userId });
         if (!cart) {
-            return res.status(200).json({ total: 0, cart: { items: [] } }); // Trả về giỏ hàng rỗng
+            return res.status(200).json({ total: 0, cart: { items: [] } });
         }
 
         const total = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);

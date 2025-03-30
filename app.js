@@ -13,7 +13,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const path = require("path"); // Thêm dòng này để import module path
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 // Kết nối MongoDB
 connectDB();
