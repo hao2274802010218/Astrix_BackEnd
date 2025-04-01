@@ -46,7 +46,6 @@ exports.addToCart = async (req, res) => {
     }
 };
 
-
 // Cập nhật số lượng sản phẩm trong giỏ hàng
 exports.updateCartItem = async (req, res) => {
     try {
@@ -103,7 +102,6 @@ exports.removeFromCart = async (req, res) => {
         res.status(500).json({ message: "Lỗi server!" });
     }
 };
-
 
 // Xóa toàn bộ giỏ hàng
 exports.clearCart = async (req, res) => {

@@ -7,7 +7,7 @@ exports.register = async (req, res) => {
     try {
         const { email, password, username, phone, address } = req.body;
 
-        if (!email || !password || !username || !phone) {
+        if (!email || !password || !username) {
             return res.status(400).json({
                 message: "Vui lòng nhập đầy đủ thông tin: email, password và username."
             });
@@ -65,7 +65,6 @@ exports.register = async (req, res) => {
     }
 };
 
-
 // Đăng nhập
 exports.login = async (req, res) => {
     const { email, password } = req.body;
@@ -115,7 +114,6 @@ exports.login = async (req, res) => {
     }
 };
 
-
 exports.checkAuth = async (req, res) => {
     try {
         const user = req.user;
@@ -132,7 +130,6 @@ exports.checkAuth = async (req, res) => {
         res.status(401).json({ message: "Không được xác thực!" });
     }
 };
-
 
 exports.getAllUsers = async (req, res) => {
     try {
@@ -186,7 +183,6 @@ exports.getUserById = async (req, res) => {
         res.status(500).json({ message: "Lỗi server, vui lòng thử lại sau" });
     }
 };
-
 
 exports.updateUserInformation = async (req, res) => {
     const { username, email, phone, address, role } = req.body;

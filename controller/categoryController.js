@@ -1,7 +1,7 @@
 const Category = require('../model/category');
 
 // Lấy tất cả danh mục
-const getAllCategories = async (req, res) => {
+exports.getAllCategories = async (req, res) => {
     try {
         const categories = await Category.find();
         res.status(200).json(categories);
@@ -11,7 +11,7 @@ const getAllCategories = async (req, res) => {
 };
 
 // Lấy một danh mục theo ID
-const getCategoryById = async (req, res) => {
+exports.getCategoryById = async (req, res) => {
     const { id } = req.params;
     try {
         const category = await Category.findById(id);
@@ -25,7 +25,7 @@ const getCategoryById = async (req, res) => {
 };
 
 // Tạo một danh mục mới
-const createCategory = async (req, res) => {
+exports.createCategory = async (req, res) => {
     const { name, valuename } = req.body;
     try {
         const newCategory = new Category({ name, valuename });
@@ -37,7 +37,7 @@ const createCategory = async (req, res) => {
 };
 
 // Cập nhật một danh mục
-const updateCategory = async (req, res) => {
+exports.updateCategory = async (req, res) => {
     const { id } = req.params;
     const { name, valuename } = req.body;
     try {
@@ -56,7 +56,7 @@ const updateCategory = async (req, res) => {
 };
 
 // Xóa một danh mục
-const deleteCategory = async (req, res) => {
+exports.deleteCategory = async (req, res) => {
     const { id } = req.params;
     try {
         const deletedCategory = await Category.findByIdAndDelete(id);
@@ -69,10 +69,3 @@ const deleteCategory = async (req, res) => {
     }
 };
 
-module.exports = {
-    getAllCategories,
-    getCategoryById,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-};

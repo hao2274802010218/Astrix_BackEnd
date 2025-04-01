@@ -10,7 +10,7 @@ const authRoutes = require("./routes/auth");
 const contactRoutes = require("./routes/contactRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-const path = require("path"); // Thêm dòng này để import module path
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT;
