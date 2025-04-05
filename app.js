@@ -10,8 +10,8 @@ const authRoutes = require("./routes/auth");
 const contactRoutes = require("./routes/contactRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const payosRoutes = require("./routes/payosRoutes");
 const path = require("path");
-
 const app = express();
 const PORT = process.env.PORT;
 
@@ -33,6 +33,7 @@ app.use(cors({
     credentials: true
 }));
 
+
 // Routes
 app.use("/api/products", productRoutes);
 app.use("/api/home", homeRoutes);
@@ -41,6 +42,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", orderRoutes);
+app.use("/api/payos", payosRoutes);
 
 // Start server
 app.listen(PORT, () => console.log(`Server chạy tại http://localhost:${PORT}`));

@@ -106,11 +106,14 @@ exports.removeFromCart = async (req, res) => {
 // Xóa toàn bộ giỏ hàng
 exports.clearCart = async (req, res) => {
     const { userId } = req.params;
+    console.log("Clearing cart for user:", userId);
     try {
         const deletedCart = await Cart.findOneAndDelete({ userId });
         if (!deletedCart) {
+            console.log("Cart not found for user:", userId);
             return res.status(404).json({ message: "Giỏ hàng không tồn tại!" });
         }
+        console.log("Cart deleted successfully for user:", userId);
         res.status(200).json({ message: "Giỏ hàng đã được xóa thành công!" });
     } catch (error) {
         console.error("Error deleting cart:", error.message);

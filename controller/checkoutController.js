@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Order = require("../model/order");
 const nodemailer = require("nodemailer");
+const PayOS = require("@payos/node");
 
 
 exports.getCheckoutById = async (req, res) => {
@@ -341,5 +342,131 @@ exports.getOrdersByUserId = async (req, res) => {
             message: "Internal server error while retrieving orders",
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
+    }
+};
+
+
+const payos = new PayOS(
+    process.env.PAYOS_CLIENT_ID,
+    process.env.PAYOS_API_KEY,
+    process.env.PAYOS_CHECKSUM_KEY
+);
+
+exports.payos = async (req, res) => {
+    try {
+        const { id, total, paymentMethod, userId, cart, username, phone, email, address, note } = req.body;
+
+        const newOrder = new Order({
+            userId,
+            username,
+            phone,
+            email,
+            address,
+            cart,
+            total,
+            note: note || "",
+            paymentMethod,
+            status: "Đang chờ thanh toán",
+        });
+
+        const savedOrder = await newOrder.save();
+
+        const order = {
+            amount: total,
+            description: `Thanh toán đơn hàng ${savedOrder._id} bằng ${paymentMethod}`,
+            orderCode: parseInt(Date.now().toString().slice(-6)),
+            returnUrl: "http://localhost:3000/checkout/success",
+            cancelUrl: "http://localhost:3000/checkout/cancel",
+        };
+
+        const paymentLink = await payos.createPaymentLink(order);
+        res.status(200).json({
+            checkoutUrl: paymentLink.checkoutUrl,
+            orderId: savedOrder._id,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Lỗi khi tạo link thanh toán Payos",
+            error: error.message,
+        });
+    }
+};
+exports.handlePayosReturn = async (req, res) => {
+    try {
+        const { orderCode } = req.query; // Lấy orderCode từ PayOS
+
+        // Kiểm tra trạng thái thanh toán với PayOS
+        const paymentInfo = await payos.getPaymentLinkInformation(orderCode);
+        if (paymentInfo.status === "PAID") {
+            // Tìm đơn hàng tương ứng
+            const order = await Order.findOne({ total: paymentInfo.amount });
+            if (order) {
+                // Cập nhật trạng thái đơn hàng
+                order.status = "Đã thanh toán";
+                await order.save();
+
+                // Xóa giỏ hàng
+                await fetch(`http://localhost:5000/api/cart/${order.userId}`, {
+                    method: "DELETE",
+                });
+
+                // Gửi email xác nhận
+                const transporter = nodemailer.createTransport({
+                    service: "Gmail",
+                    auth: {
+                        user: "astrixalwayswithyou@gmail.com",
+                        pass: "qnxc dufh wybx tmsc",
+                    },
+                });
+
+                const cartItemsHtml = order.cart
+                    .map(
+                        (item) => `
+              <tr style="background-color:rgb(255, 255, 255); text-align: center;">
+                  <td style="padding: 12px; color: #333;border: 1px solid #ddd">${item.name}</td>
+                  <td style="padding: 12px; color: #333;border: 1px solid #ddd">${item.size}</td>
+                  <td style="padding: 12px; color: #333;border: 1px solid #ddd">${item.price.toLocaleString()} VND</td>
+                  <td style="padding: 12px; color: #333;border: 1px solid #ddd">${item.quantity}</td>
+                  <td style="padding: 12px; color: #e74c3c;border: 1px solid #ddd; font-weight: bold;">
+                      ${(item.price * item.quantity).toLocaleString()} VND
+                  </td>
+              </tr>
+          `
+                    )
+                    .join("");
+
+                await transporter.sendMail({
+                    from: '"Astrix - Luôn đồng hành cùng bạn" <astrixalwayswithyou@gmail.com>',
+                    to: order.email,
+                    subject: "Xác nhận thanh toán đơn hàng từ Astrix",
+                    html: `
+              <div style="font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; padding: 25px;">
+                <h2>Xin chào ${order.username}</h2>
+                <p>Đơn hàng của bạn đã được thanh toán thành công qua PayOS.</p>
+                <h4>Chi tiết đơn hàng:</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #ecf0f1;">
+                      <th>Sản phẩm</th><th>Kích cỡ</th><th>Đơn giá</th><th>Số lượng</th><th>Thành tiền</th>
+                    </tr>
+                  </thead>
+                  <tbody>${cartItemsHtml}</tbody>
+                </table>
+                <p><strong>Tổng tiền:</strong> ${order.total.toLocaleString()} VND</p>
+                <p>Cảm ơn bạn đã mua sắm tại Astrix!</p>
+              </div>
+            `,
+                });
+
+                res.redirect("/cart?payment=success");
+            } else {
+                res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+            }
+        } else {
+            res.redirect("/cart?payment=failed");
+        }
+    } catch (error) {
+        console.error("Error handling PayOS return:", error);
+        res.status(500).json({ message: "Lỗi xử lý thanh toán" });
     }
 };
